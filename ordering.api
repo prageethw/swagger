@@ -6,7 +6,7 @@ info:
 paths:
   /private_api/v1/orders:
     post:
-      summary: Create or modify an order
+      summary: Create, modify, or cancel an order
       requestBody:
         required: true
         content:
@@ -19,34 +19,32 @@ paths:
                     - required: [productInstanceId]
                   description: At least one of solutionId, siteId, or productInstanceId must be provided
                 - type: object
-                  required:
-                    - action
+                  required: [action]
                   properties:
                     solutionId:
                       type: string
-                      description: Solution Identifier
+                      example: "solution-123"
                     siteId:
                       type: string
-                      description: Site Identifier
+                      example: "site-456"
                     productInstanceId:
                       type: string
-                      description: Product Instance Identifier
+                      example: "prod-789"
                     action:
                       type: string
-                      description: Represents Service Activation/Modification/Termination
                       enum: [NEW, MODIFY, CANCEL]
+                      example: MODIFY
                     feature:
                       type: object
-                      description: Required if action is MODIFY
-                      required:
-                        - name
+                      required: [name]
                       properties:
                         name:
                           type: string
                           enum: [accessControlList, staticRouting, baseFeatures]
+                          example: baseFeatures
                         isEnabled:
                           type: boolean
-                          description: Flag to enable/disable the feature
+                          example: true
                     instanceFields:
                       type: array
                       items:
@@ -55,34 +53,124 @@ paths:
                         properties:
                           name:
                             type: string
+                            example: "region"
                           value:
                             type: string
+                            example: "APAC"
+            examples:
+              NewWithSolutionId:
+                summary: Create new order with solutionId
+                value:
+                  solutionId: "solution-001"
+                  action: "NEW"
+                  instanceFields:
+                    - name: "env"
+                      value: "test"
+
+              ModifyWithSolutionId:
+                summary: Modify order using solutionId
+                value:
+                  solutionId: "solution-001"
+                  action: "MODIFY"
+                  feature:
+                    name: "staticRouting"
+                    isEnabled: true
+                  instanceFields:
+                    - name: "route"
+                      value: "10.0.0.0/16"
+
+              CancelWithSolutionId:
+                summary: Cancel order using solutionId
+                value:
+                  solutionId: "solution-001"
+                  action: "CANCEL"
+
+              NewWithSiteId:
+                summary: Create new order with siteId
+                value:
+                  siteId: "site-ABC"
+                  action: "NEW"
+                  instanceFields:
+                    - name: "region"
+                      value: "APAC"
+
+              ModifyWithSiteId:
+                summary: Modify order using siteId
+                value:
+                  siteId: "site-ABC"
+                  action: "MODIFY"
+                  feature:
+                    name: "accessControlList"
+                    isEnabled: false
+                  instanceFields:
+                    - name: "subnet"
+                      value: "192.168.1.0/24"
+
+              CancelWithSiteId:
+                summary: Cancel order using siteId
+                value:
+                  siteId: "site-ABC"
+                  action: "CANCEL"
+
+              NewWithProductInstanceId:
+                summary: Create new order with productInstanceId
+                value:
+                  productInstanceId: "prod-789"
+                  action: "NEW"
+                  instanceFields:
+                    - name: "tier"
+                      value: "premium"
+
+              ModifyWithProductInstanceId:
+                summary: Modify order using productInstanceId
+                value:
+                  productInstanceId: "prod-789"
+                  action: "MODIFY"
+                  feature:
+                    name: "baseFeatures"
+                    isEnabled: true
+                  instanceFields:
+                    - name: "featureCode"
+                      value: "BF123"
+
+              CancelWithProductInstanceId:
+                summary: Cancel order using productInstanceId
+                value:
+                  productInstanceId: "prod-789"
+                  action: "CANCEL"
+
       parameters:
         - name: X_TELSTRA_MICROTOKEN
           in: header
           required: true
           schema:
             type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
           description: Microtoken to invoke APIs
+
         - name: CORRELATION_ID
           in: header
           required: true
           schema:
             type: string
             format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
           description: Unique identifier in UUID format
+
         - name: SOURCE_SYSTEM
           in: header
           required: true
           schema:
             type: string
+          example: "PORTAL_UI"
           description: Source System Identifier
+
       responses:
         '200':
-          description: Success
+          description: Operation successful
         '400':
-          description: Invalid Request
+          description: Invalid request
         '401':
           description: Unauthorized
         '500':
-          description: Server Error
+          description: Internal server error
