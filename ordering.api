@@ -1,0 +1,88 @@
+openapi: 3.0.3
+info:
+  title: Orders API
+  version: 1.0.0
+
+paths:
+  /private_api/v1/orders:
+    post:
+      summary: Create or modify an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - anyOf:
+                    - required: [solutionId]
+                    - required: [siteId]
+                    - required: [productInstanceId]
+                  description: At least one of solutionId, siteId, or productInstanceId must be provided
+                - type: object
+                  required:
+                    - action
+                  properties:
+                    solutionId:
+                      type: string
+                      description: Solution Identifier
+                    siteId:
+                      type: string
+                      description: Site Identifier
+                    productInstanceId:
+                      type: string
+                      description: Product Instance Identifier
+                    action:
+                      type: string
+                      description: Represents Service Activation/Modification/Termination
+                      enum: [NEW, MODIFY, CANCEL]
+                    feature:
+                      type: object
+                      description: Required if action is MODIFY
+                      required:
+                        - name
+                      properties:
+                        name:
+                          type: string
+                          enum: [accessControlList, staticRouting, baseFeatures]
+                        isEnabled:
+                          type: boolean
+                          description: Flag to enable/disable the feature
+                    instanceFields:
+                      type: array
+                      items:
+                        type: object
+                        required: [name, value]
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+      parameters:
+        - name: X_TELSTRA_MICROTOKEN
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Microtoken to invoke APIs
+        - name: CORRELATION_ID
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Unique identifier in UUID format
+        - name: SOURCE_SYSTEM
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Source System Identifier
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Invalid Request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server Error
